@@ -1,6 +1,6 @@
 import copy
 import time
-# import json
+import json
 
 import requests
 
@@ -44,7 +44,10 @@ class ApiBase:
             return response.json()
         print(response.url)
         print(response.history)
-        raise ApiError(response.json())
+        try:
+            raise ApiError(response.json())
+        except json.decoder.JSONDecodeError:
+            raise ApiError(response.status_code)
 
     def _print_info_about_request(self, request):
         if self.verbosity == 0:
