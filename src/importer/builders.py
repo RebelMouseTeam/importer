@@ -222,7 +222,10 @@ class PostBuilder(object):
     def get_lead_image(self, meta):
         for field_name in self.IMAGE_POSTMETA_KEYS:
             if field_name in meta:
-                thumb_id = int(meta[field_name][0])
+                try:
+                    thumb_id = int(meta[field_name][0])
+                except ValueError:
+                    continue
                 image_info = self.attachments.get_image_info_by_id(thumb_id)
                 if image_info and 'image_id' in image_info:
                     response = {
