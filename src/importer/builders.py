@@ -172,8 +172,8 @@ class PostBuilder(object):
         return tags
 
     def get_roar_author_ids(self, item):
-        author_id = self.authors.get_by_key(item['creator'])
-        return [author_id]
+        author_info = self.authors.get_by_key(item['creator'])
+        return [author_info['id']]
 
     def get_sections(self, item):
         categories = item['category']
