@@ -87,9 +87,10 @@ class AuthorsImporter(ItemImporter):
 
     def upload(self, original_item):
         specific_data = {i: original_item[i] for i in self.original_key_fields}
+        name = self._prepare_name(original_item['login'])
         response = self.api.create_author(
             email=original_item['email'],
-            name=original_item['login'],
+            name=name,
             first_name=original_item['first_name'],
             last_name=original_item['last_name'],
             specific_data={
@@ -98,6 +99,10 @@ class AuthorsImporter(ItemImporter):
             },
         )
         self._store_response(original_item, response)
+
+    def _prepare_name(self, name):
+        fixed_name = name.replace('.', '_').replace(' ', '_')
+        return fixed_name
 
 
 class PostsImporter(ItemImporter):
