@@ -88,6 +88,11 @@ class AuthorsImporter(ItemImporter):
     def upload(self, original_item):
         specific_data = {i: original_item[i] for i in self.original_key_fields}
         name = self._prepare_name(original_item['login'])
+        site = self.api.get_site_by_name(name)
+        if site:
+            self._store_response(original_item, site)
+            return
+
         response = self.api.create_author(
             email=original_item['email'],
             name=name,
