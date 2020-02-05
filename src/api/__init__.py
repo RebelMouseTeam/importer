@@ -1,6 +1,6 @@
 import copy
 import time
-# import json
+import json
 
 import requests
 
@@ -44,7 +44,10 @@ class ApiBase:
             return response.json()
         print(response.url)
         print(response.history)
-        raise ApiError(response.json())
+        try:
+            raise ApiError(response.json())
+        except json.decoder.JSONDecodeError:
+            raise ApiError(response.status_code)
 
     def _print_info_about_request(self, request):
         if self.verbosity == 0:
@@ -139,6 +142,13 @@ class API(ApiBase):
         api_url = 'https://{}/api/{}/sections'.format(self.domain, self.API_VERSION)
         response = self._get_request(api_url)
         return map(self._extract_section_info_from_item, response)
+
+    def get_site_by_name(self, name):
+        api_url = 'https://{}/api/{}/authors/name'.format(self.domain, '1.2')
+        response = self._get_request(api_url, params={'author_names': name})
+        authors = response['data']
+        if authors:
+            return authors[0]
 
     def create_section(self, title, url, status=SectionStatus.PRIVATE, about_html=''):
         api_url = 'https://{}/api/{}/sections'.format(self.domain, self.API_VERSION)

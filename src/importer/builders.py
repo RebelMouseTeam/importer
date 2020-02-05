@@ -172,8 +172,8 @@ class PostBuilder(object):
         return tags
 
     def get_roar_author_ids(self, item):
-        author_id = self.authors.get_by_key(item['creator'])
-        return [author_id]
+        author_info = self.authors.get_by_key(item['creator'])
+        return [author_info['id']]
 
     def get_sections(self, item):
         categories = item['category']
@@ -198,31 +198,13 @@ class PostBuilder(object):
         # TODO: check for scheduling
         return response
 
-    # def get_meta_embeds(self, meta):
-    #     for field_name in self.EMBED_POSTMETA_KEYS:
-    #         if field_name in meta:
-    #             value = meta[field_name][0]
-    #             if not value:
-    #                 continue
-    #             embed = get_embed(value)
-    #             if embed:
-    #                 return {
-    #                     'video': embed.get_embed_url(),
-    #                     'type': 'video',
-    #                 }
-    #             else:
-    #                 p = urlparse.urlparse(value)
-    #                 if p.path.endswith(('.mp4', '.m4p', '.webm', '.flv')):
-    #                     return {
-    #                         'video': value,
-    #                         'type': 'video',
-    #                     }
-    #     return {}
-
     def get_lead_image(self, meta):
         for field_name in self.IMAGE_POSTMETA_KEYS:
             if field_name in meta:
-                thumb_id = int(meta[field_name][0])
+                try:
+                    thumb_id = int(meta[field_name][0])
+                except ValueError:
+                    continue
                 image_info = self.attachments.get_image_info_by_id(thumb_id)
                 if image_info and 'image_id' in image_info:
                     response = {
