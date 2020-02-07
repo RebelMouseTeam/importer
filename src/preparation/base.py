@@ -49,13 +49,6 @@ class Preparator:
 
     @classmethod
     def _prepare_content(cls, content):
-        broken_symbols = [
-            b'\x00', b'\x01', b'\x02', b'\x03', b'\x04', b'\x05', b'\x06',
-            b'\x08', b'\x0B', b'\x0C', b'\x10', b'\x11', b'\x13', b'\x14',
-            b'\x17', b'\x18', b'\x19', b'\x1C', b'\x1D', b'\x1E',
-        ]
-        for i in broken_symbols:
-            content = content.replace(i, b'')
         return content
 
 
@@ -64,3 +57,14 @@ class WpPreparator(Preparator):
     parser_cls = wp_parsers.DefaultXmlParser
     source_flow_cls = preparation.flows.source.FileSourceFlow
     destination_flow_cls = preparation.flows.destination.MongoDestinationFlow
+
+    @classmethod
+    def _prepare_content(cls, content):
+        broken_symbols = [
+            b'\x00', b'\x01', b'\x02', b'\x03', b'\x04', b'\x05', b'\x06',
+            b'\x08', b'\x0B', b'\x0C', b'\x10', b'\x11', b'\x13', b'\x14',
+            b'\x17', b'\x18', b'\x19', b'\x1C', b'\x1D', b'\x1E',
+        ]
+        for i in broken_symbols:
+            content = content.replace(i, b'')
+        return content
