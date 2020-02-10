@@ -150,7 +150,7 @@ class API(ApiBase):
         if authors:
             return authors[0]
 
-    def create_section(self, title, url, status=SectionStatus.PRIVATE, about_html=''):
+    def create_section(self, title, url, status=SectionStatus.PRIVATE, about_html='', parent_id=None):
         api_url = 'https://{}/api/{}/sections'.format(self.domain, self.API_VERSION)
         params = {
             'title': title,
@@ -158,6 +158,8 @@ class API(ApiBase):
             'status': status,
             'about_html': about_html,
         }
+        if parent_id:
+            params['parent_id'] = parent_id
         response = self._post_request(api_url, data=params)
         return self._extract_section_info_from_item(response)
 
