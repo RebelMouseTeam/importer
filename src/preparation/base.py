@@ -9,9 +9,12 @@ import preparation.wp.extractors as wp_extractors
 import preparation.flows.source
 import preparation.flows.destination
 
+from preparation import checkers
+
 
 class Preparator:
     extractors = []
+    source_checker_cls = checkers.SourceChecker
     parser_cls = None
     source_flow_cls = None
     destination_flow_cls = None
@@ -22,16 +25,8 @@ class Preparator:
         response = collections.defaultdict(dict)
 
         for content in cls.source_flow_cls.iterate_from_source(source):
-            try:
-                parsed_content = cls.parser_cls.parse(content)
-            except lxml.etree.XMLSyntaxError:
-                prepared_content = cls._prepare_content(content)
-                try:
-                    parsed_content = cls.parser_cls.parse(prepared_content)
-                except Exception:
-                    with open('error.xml', 'wb') as f:
-                        f.write(prepared_content)
-                    raise
+            parsed_content = cls._parse_content(content)
+            cls.source_checker_cls.raise_for_source(parsed_content)
             for extractor in cls.extractors:
                 for group, key, item in extractor.iterate(parsed_content):
                     response[group][key] = item
@@ -48,12 +43,27 @@ class Preparator:
         return cls.destination_flow_cls.move_to_destination(response, destination)
 
     @classmethod
+    def _parse_content(cls, content):
+        try:
+            parsed_content = cls.parser_cls.parse(content)
+        except lxml.etree.XMLSyntaxError:
+            prepared_content = cls._prepare_content(content)
+            try:
+                parsed_content = cls.parser_cls.parse(prepared_content)
+            except Exception:
+                with open('error.xml', 'wb') as f:
+                    f.write(prepared_content)
+                raise
+        return parsed_content
+
+    @classmethod
     def _prepare_content(cls, content):
         return content
 
 
 class WpPreparator(Preparator):
     extractors = [wp_extractors.SectionExtractor, wp_extractors.ItemExtractor, wp_extractors.AuthorExtractor]
+    source_checker_cls = checkers.WpSourceChecker
     parser_cls = wp_parsers.DefaultXmlParser
     source_flow_cls = preparation.flows.source.FileSourceFlow
     destination_flow_cls = preparation.flows.destination.MongoDestinationFlow
