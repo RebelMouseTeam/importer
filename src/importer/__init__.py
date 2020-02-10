@@ -69,6 +69,17 @@ class SectionsImporter(ItemImporter):
         self.api = api
         self.created_sections = {i['url']: i for i in api.get_sections()}
 
+    def upload_all(self):
+        items = self._iter_source_items()
+        parent_items = [i for i in items if not i['parent_id']]
+        child_items = [i for i in items if i['parent_id']]
+        failed, parents_map = self._upload_sections(parent_items)
+        for item in child_items:
+            if item['parent_id'] in parents_map:
+                item['parent_id'] = parents_map[item['parent_id']]
+        failed.extend(self._upload_sections(child_items)[0])
+        return failed
+
     def upload(self, original_item):
         if original_item['url'] in self.created_sections:
             response = self.created_sections[original_item['url']]
@@ -76,8 +87,25 @@ class SectionsImporter(ItemImporter):
             response = self.api.create_section(
                 title=original_item['title'],
                 url=original_item['url'],
+                parent_id=original_item.get('parent_id'),
             )
         self._store_response(original_item, response)
+        return response
+
+    def _upload_sections(self, items):
+        failed = []
+        sections_map = {}
+        for original_item in items:
+            if self._is_processed(original_item):
+                print('item already processed')
+                continue
+            try:
+                section_info = self.upload(original_item)
+            except Exception as e:
+                failed.append((original_item, e))
+            else:
+                sections_map[original_item['url']] = section_info['id']
+        return failed, sections_map
 
 
 class AuthorsImporter(ItemImporter):
