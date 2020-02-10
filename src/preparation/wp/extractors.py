@@ -1,3 +1,5 @@
+import urllib.parse
+
 from . import field_handlers
 
 
@@ -151,6 +153,15 @@ class AuthorExtractor(ItemExtractorBase):
 
 class SectionExtractor(ItemExtractorBase):
     @classmethod
+    def iterate(cls, parsed_content):
+        parents_map = cls._extract_sections_structure(parsed_content)
+        for item in cls._raw_iterator(parsed_content):
+            prepared_item = cls._prepare_item(item, parents_map)
+            group = cls._get_item_group(prepared_item)
+            key = cls._key_func(prepared_item)
+            yield (group, key, prepared_item)
+
+    @classmethod
     def _key_func(cls, prepared_item):
         return prepared_item['url']
 
@@ -165,5 +176,38 @@ class SectionExtractor(ItemExtractorBase):
             yield category
 
     @classmethod
-    def _prepare_item(cls, item):
-        return {'url': item.attrib['nicename'], 'title': item.text}
+    def _prepare_item(cls, item, parents_map):
+        slug = item.attrib['nicename']
+        return {
+            'url': slug,
+            'parent_id': parents_map.get(slug),
+            'title': item.text,
+        }
+
+    @classmethod
+    def _extract_sections_structure(cls, parsed_content):
+        items = map(cls._section_names_extractor, cls._raw_link_iterator(parsed_content))
+        nested_items = [i for i in items if len(i) > 1]
+        response = {}
+        for item in nested_items:
+            # [q, w, e]
+            for index in range(len(item) - 1):
+                response[item[index + 1]] = item[index]
+        return response
+
+    @classmethod
+    def _raw_link_iterator(cls, parsed_content):
+        for item in parsed_content.xpath('.//item', namespaces=parsed_content.nsmap):
+            item_type = item.xpath('.//wp:post_type', namespaces=item.nsmap)[0].text
+            if item_type != 'attachment':
+                guid = item.xpath('.//guid', namespaces=item.nsmap)[0].text
+                name = item.xpath('.//wp:post_name', namespaces=item.nsmap)[0].text
+                yield (guid, name)
+
+    @classmethod
+    def _section_names_extractor(cls, url, basename):
+        path = urllib.parse.urlparse(url).path
+        if basename in path:
+            path = path[:path.index(basename)]
+        items = path.strip('/').split('/')
+        return items
