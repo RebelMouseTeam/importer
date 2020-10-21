@@ -27,9 +27,23 @@ class ItemImporter:
 
     def _iter_source_items(self):
         collection = self.db[self.source_collection]
-        for item in collection.find({}):
-            del(item['_id'])
-            yield item
+        cursor = collection.find({}, no_cursor_timeout=True)
+        try:
+            return self._iter_cursor(cursor)
+        except:
+            cursor.close()
+            raise
+
+    @classmethod
+    def _iter_cursor(cls, cursor):
+        for item in cursor:
+            if not cls._should_item_be_skipped(item):
+                del(item['_id'])
+                yield item
+
+    @staticmethod
+    def _should_item_be_skipped(item):
+        return False
 
     def _is_processed(self, original_item):
         collection = self.db[self.destination_collection]
@@ -140,11 +154,10 @@ class PostsImporter(ItemImporter):
     def _pick_builder_for_item(self, item):
         return self.default_builder
 
-    def _iter_source_items(self):
-        collection = self.db[self.source_collection]
-        for item in collection.find({}):
-            if item['type'] in self.types_to_import:
-                del(item['_id'])
-                yield item
-            else:
-                print('skipping item with type:', item['type'])
+    @classmethod
+    def _should_item_be_skipped(cls, item):
+        if item['type'] in cls.types_to_import:
+            return False
+        else:
+            print('skipping item with type:', item['type'])
+            return True
