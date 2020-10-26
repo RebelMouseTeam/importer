@@ -30,7 +30,7 @@ class ItemImporter:
         cursor = collection.find({}, no_cursor_timeout=True)
         try:
             return self._iter_cursor(cursor)
-        except:
+        except Exception:
             cursor.close()
             raise
 
