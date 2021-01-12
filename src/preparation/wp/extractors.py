@@ -70,18 +70,12 @@ class ItemExtractor(ItemExtractorBase):
             'type': item_type,
             'status': item.xpath('.//wp:status', namespaces=item.nsmap)[0].text,
             'category': [],
-            'meta': [],
         }
 
         for category in item.xpath('.//category', namespaces=item.nsmap):
             prepared_item['category'].append(field_handlers.attrib_dict_plus_text(category))
 
-        for postmeta in item.xpath('.//wp:postmeta', namespaces=item.nsmap):
-            key, value = field_handlers.postmeta_pair(postmeta)
-            # if key.startswith('_') and value.startswith('field_'):
-            #     continue  # skip useless meta fields
-            prepared_item['meta'].append((key, value))
-
+        prepared_item['meta'] = cls._extract_meta(item)
         return prepared_item
 
     @classmethod
@@ -102,8 +96,17 @@ class ItemExtractor(ItemExtractorBase):
             'type': item.xpath('.//wp:post_type', namespaces=item.nsmap)[0].text,
             # 'status': item.xpath('.//wp:status', namespaces=item.nsmap)[0].text,
             'url': item.xpath('.//wp:attachment_url', namespaces=item.nsmap)[0].text,
+            'meta': cls._extract_meta(item),
         }
         return prepared_item
+
+    @classmethod
+    def _extract_meta(cls, item):
+        meta = []
+        for postmeta in item.xpath('.//wp:postmeta', namespaces=item.nsmap):
+            key, value = field_handlers.postmeta_pair(postmeta)
+            meta.append((key, value))
+        return meta
 
 
 class AuthorExtractor(ItemExtractorBase):
