@@ -80,6 +80,7 @@ class ItemExtractor(ItemExtractorBase):
 
     @classmethod
     def _prepare_attachment(cls, item):
+        meta = cls._extract_meta(item)
         prepared_item = {
             'title': item.xpath('.//title', namespaces=item.nsmap)[0].text,
             # 'link': item.xpath('.//link', namespaces=item.nsmap)[0].text,
@@ -96,7 +97,8 @@ class ItemExtractor(ItemExtractorBase):
             'type': item.xpath('.//wp:post_type', namespaces=item.nsmap)[0].text,
             # 'status': item.xpath('.//wp:status', namespaces=item.nsmap)[0].text,
             'url': item.xpath('.//wp:attachment_url', namespaces=item.nsmap)[0].text,
-            'meta': cls._extract_meta(item),
+            'meta': meta,
+            'alt': self._get_alt(meta),
         }
         return prepared_item
 
@@ -107,6 +109,15 @@ class ItemExtractor(ItemExtractorBase):
             key, value = field_handlers.postmeta_pair(postmeta)
             meta.append((key, value))
         return meta
+
+    @classmethod
+    def _get_alt(cls, meta):
+        if not meta:
+            return ''
+        for key, value in meta:
+            if key == '_wp_attachment_image_alt':
+                return value
+        return ''
 
 
 class AuthorExtractor(ItemExtractorBase):
