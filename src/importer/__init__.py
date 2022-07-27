@@ -68,7 +68,7 @@ class ImageImporter(ItemImporter):
             image_url=original_item['url'],
             caption=original_item['content'],
             credit=original_item['excerpt'],
-            # alt='',
+            alt=original_item['alt'],
         )
         self._store_response(original_item, response)
 
