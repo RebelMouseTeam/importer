@@ -93,6 +93,20 @@ class SectionsImporter(ItemImporter):
             )
         self._store_response(original_item, response)
 
+    def _iter_source_items(self):
+        collection = self.db[self.source_collection]
+        cursor = collection.find({}, no_cursor_timeout=True)
+        try:
+            items = list(self._iter_cursor(cursor))
+        except Exception:
+            cursor.close()
+            raise
+        else:
+            for level in range(4):
+                for item in items:
+                    if item['url'].strip('/').count('/') == level:
+                        yield item
+
 
 class AuthorsImporter(ItemImporter):
     source_collection = 'authors'
