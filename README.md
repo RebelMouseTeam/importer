@@ -1,11 +1,11 @@
 # Objective
 
-This repositiry created specifically for RebelMouse clients who is willing to perform content import from their current platform to RebelMouse
+This repository was created specifically for RebelMouse clients who want to perform a content import from their current platform to RebelMouse.
 
 
 
 # Getting started
-To run it you will need docker installed
+To run this, you will need docker installed
 ## OSX and Linux
 
 ```bash
