@@ -98,7 +98,7 @@ class ItemExtractor(ItemExtractorBase):
             # 'status': item.xpath('.//wp:status', namespaces=item.nsmap)[0].text,
             'url': item.xpath('.//wp:attachment_url', namespaces=item.nsmap)[0].text,
             'meta': meta,
-            'alt': self._get_alt(meta),
+            'alt': cls._get_alt(meta),
         }
         return prepared_item
 
